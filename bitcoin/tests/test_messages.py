@@ -15,6 +15,7 @@ from bitcoin.messages import msg_version, msg_verack, msg_addr, msg_alert, \
     msg_inv, msg_getdata, msg_getblocks, msg_getheaders, msg_headers, msg_tx, \
     msg_block, msg_getaddr, msg_ping, msg_pong, msg_mempool, MsgSerializable, \
     msg_notfound, msg_reject
+from bitcoin.core.serialize import ser_read, SerializationTruncationError
 
 import sys
 if sys.version > '3':
@@ -30,6 +31,12 @@ class MessageTestCase(unittest.TestCase):
         mDeserialzed = cls.from_bytes(mSerialized)
         mSerialzedTwice = mDeserialzed.to_bytes()
         self.assertEqual(mSerialized, mSerialzedTwice)
+
+        # Check that the serialization is completely used by the deserialization
+        f = BytesIO(mSerialized[4+12+4+4:])
+        cls.msg_deser(f)
+        with self.assertRaises(SerializationTruncationError):
+            ser_read(f, 1)
 
 
 class Test_msg_version(MessageTestCase):
